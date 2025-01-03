@@ -1,31 +1,90 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <style>
-    body {
-      background-color: #f2f2f2;
-      text-align: center;
-    }
-    h1 {
-      font-size: 100px;
-      margin-top: 250px;
-      color: rgb(51, 51, 51);
-    } 
-    p {
-      font-size: 50px;
-      margin-top: 20px;
-      color: rgb(51, 51, 51);
-    }
-    a {
-      font-size: 20px;
-      text-decoration: none;
-      color: #333;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
-  <h1>Error 404</h1>
-  <p>Oops! Page not found.</p>
-  <a href="/">Go to home page</a>
+    <div class="main-container">
+        <div class="sidebar">
+            <h1>Weather Forecast🌤️</h1>
+            <input type="text" id="city-input" placeholder="Enter city name">
+            <button onclick="getWeather()">Get Weather</button>
+        </div>
+        <div class="weather-container">
+            <div class="location">
+                <div>
+                    <h1 id="city">City, Country</h1>
+                    <p id="date">Month Date, Year</p>
+                </div>
+                <p id="weather">Weather Type</p>
+            </div>
+            <div class="weather-forecast" id="hourly-forecast">
+                Weather Forecast Details...
+            </div>
+            <div class="additional-info">
+                <p>Precipitation: <span id="precipitation">0 hPa</span></p>
+                <p>Humidity: <span id="humidity">0%</span></p>
+                <p>Wind: <span id="wind">0 km/h</span></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const apiKey = '';  
+
+        function getWeather() {
+            const city = $('#city-input').val();
+            if (city) {
+                fetchWeatherData(city);
+            } else {
+                alert('Please enter a city name');
+            }
+        }
+
+        function fetchWeatherData(city) {
+            $('#city').text('Loading...');
+            $.ajax({
+                url: `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=metric`,
+                method: 'GET',
+                success: function (data) {
+                    const currentDate = new Date();
+                    $('#city').text(`${data.city.name}, ${data.city.country}`);
+                    $('#weather').text(data.list[0].weather[0].description);
+                    $('#precipitation').text(`${data.list[0].main.pressure} hPa`);
+                    $('#humidity').text(`${data.list[0].main.humidity}%`);
+                    $('#wind').text(`${data.list[0].wind.speed} km/h`);
+                    $('#date').text(currentDate.toDateString());
+
+                    fetchHourlyData(data.list);
+                },
+                error: function () {
+                    alert('Failed to fetch weather data.');
+                }
+            });
+        }
+
+        function fetchHourlyData(data) {
+            let forecastHtml = '';
+            for (let i = 0; i < 4; i++) {
+                const forecast = data[i];
+                const time = new Date(forecast.dt * 1000);
+                const hour = time.getHours();
+                const icon = `http://openweathermap.org/img/wn/${forecast.weather[0].icon}.png`;
+                const temp = Math.round(forecast.main.temp);
+                forecastHtml += `
+                    <div class="forecast-item">
+                        <p>${hour}:00</p>
+                        <img src="${icon}" alt="weather icon">
+                        <p>${temp}°C</p>
+                    </div>
+                `;
+            }
+            $('#hourly-forecast').html(forecastHtml);
+        }
+    </script>
 </body>
 </html>
